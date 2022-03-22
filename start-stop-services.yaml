@@ -1,0 +1,9 @@
+---
+- name: Start/stop/restart/reload systemctl services
+  hosts: "{{ rhel_hosts }}"
+  tasks:
+  - name: "{{ rhel_service_action }} systemctl services {{ rhel_services }}"
+    ansible.builtin.systemd:
+      name: "{{ item }}"
+      state: "{{ rhel_service_action }}ed"
+    loop: "{{ rhel_services.split(',') }}"

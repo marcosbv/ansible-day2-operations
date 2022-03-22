@@ -1,0 +1,9 @@
+---
+- name: Install / Remove packages
+  hosts: "{{ rhel_hosts }}"
+  tasks:
+  - name: Install all packages
+    yum:
+      name: "{{ item }}"
+      state: "{{ rhel_present_absent }}"
+    loop: "{{ packages.split(',') }}"

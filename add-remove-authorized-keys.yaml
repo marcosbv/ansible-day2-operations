@@ -1,0 +1,9 @@
+---
+- hosts: "{{ rhel_hosts }}"
+  tasks:
+    - name: update authorized_hosts
+      lineinfile:
+        dest: "/root/.ssh/authorized_keys"
+        line: "{{ ssh_public_key }}"
+        state: "{{ ssh_state }}"
+        backup: yes

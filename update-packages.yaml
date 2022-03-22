@@ -1,0 +1,8 @@
+---
+- name: Update RHEL packages
+  hosts: "{{ rhel_hosts }}"
+  tasks:
+  - name: Upgrade all packages
+    yum:
+      name: '*'
+      state: latest
