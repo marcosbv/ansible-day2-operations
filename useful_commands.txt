@@ -1,0 +1,59 @@
+# Useful commands
+
+Folder: /home/vpcuser/ansible-day2-operations
+
+Temporary activation for installing RHEL packages in a BYOL RHEL (PoC only):
+
+```
+for i in {31..50}; do ansible-playbook -i workers.txt --private-key /etc/ssh/ssh_host_rsa_key -e rhel_hosts="dalazsim1-workers[$i]" -e activation_key=1-99d17XXX --ssh-common-args '-o StrictHostKeyChecking=no' internal-rhel-register.yaml; done
+```
+
+Install/remove packages:
+
+````
+ansible-playbook -i workers.txt --private-key /etc/ssh/ssh_host_rsa_key --ssh-common-args '-o StrictHostKeyChecking=no' -e rhel_hosts="dalazsim1-workers" -e rhel_present_absent=present -e packages=atk,boost,boost-devel,libX11,libXi,libgfortran,gtk2,gtk2-devel,libibverbs,libtool-ltdl,unixODBC install-remove-packages.yaml 
+````
+
+Package removal: -e rhel_present_absent=absent
+
+Start/stop/restart services:
+
+````
+ansible-playbook -i workers.txt --private-key /etc/ssh/ssh_host_rsa_key --ssh-common-args '-o StrictHostKeyChecking=no' -e rhel_hosts="dalazsim1-workers" -e rhel_service_action=restart/stopp/start -e rhel_services=ego,logdna-agent start-stop-services.yaml 
+````
+
+Install LogDNA Agent:
+
+```
+ansible-playbook -i workers.txt --private-key /etc/ssh/ssh_host_rsa_key --ssh-common-args '-o StrictHostKeyChecking=no' -e rhel_hosts="dalazsim1-workers" install-logdna-agent.yaml 
+```
+
+Change EGO base port (used to change the automation default [17869] to [9100], as Simplicity uses this port range at AWS):
+
+```
+ansible-playbook -i workers.txt --private-key /etc/ssh/ssh_host_rsa_key --ssh-common-args '-o StrictHostKeyChecking=no' -e rhel_hosts="dalazsim1-workers[0]" -e baseport=9100 change-ego-baseport.yaml 
+```
+
+Change ego.conf parameter:
+
+```
+ansible-playbook -i workers.txt --private-key /etc/ssh/ssh_host_rsa_key --ssh-common-args '-o StrictHostKeyChecking=no' -e rhel_hosts="dalazsim1-workers" -e property_name=EGO_KD_TS_PORT -e property_value=9122 change-ego-config.yaml 
+```
+
+Add search domain in /etc/resolv.conf - it allows resolution of host names by DNS
+
+````
+ansible-playbook -i workers.txt --private-key /etc/ssh/ssh_host_rsa_key --ssh-common-args '-o StrictHostKeyChecking=no' -e rhel_hosts="dalazsim1-workers" -e domain=us-south-2.hpc.citi.com add-search-domain.yaml 
+````
+
+Add symbolic links:
+
+````
+ansible-playbook -i workers.txt --private-key /etc/ssh/ssh_host_rsa_key --ssh-common-args '-o StrictHostKeyChecking=no' -e rhel_hosts="dalazsim1-workers" -e link_name=/tmp/link_name -e file_name=/tmp/file_name add-symbolic-links.yaml 
+````
+
+Add or remove authorized SSH keys:
+
+````
+ansible-playbook -i workers.txt --private-key /etc/ssh/ssh_host_rsa_key --ssh-common-args '-o StrictHostKeyChecking=no' -e rhel_hosts="dalazsim1-workers" -e "ssh_public_key=ssh-key XSDSDSDS...." -e ssh_state=present/absent add-remove-authorized-keys.yaml 
+````

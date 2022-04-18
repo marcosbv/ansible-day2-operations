@@ -1,0 +1,12 @@
+---
+- hosts: "{{ rhel_hosts }}"
+  gather_facts: True
+
+  tasks:
+    - name: update ego.conf
+      lineinfile:
+        dest: "/opt/ibm/spectrumcomputing/kernel/conf/ego.conf"
+        regexp: "{{ property_name }}"
+        line: "{{ property_name }}={{ property_value }}"
+        state: present
+        backup: yes

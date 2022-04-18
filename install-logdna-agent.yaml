@@ -1,0 +1,35 @@
+---
+- name: Install LogDNA Agent
+  hosts: "{{ rhel_hosts }}"
+  tasks:
+  - name: Copy logdna binary from Bastion to destination
+    ansible.builtin.copy:
+       src: /usr/bin/logdna-agent
+       dest: /usr/bin/logdna-agent
+       mode: '0755'
+  - name: Copy logdna env configuration from Bastion to destination
+    ansible.builtin.copy:
+       src: /etc/logdna.env
+       dest: /etc/logdna.env
+  - name: Copy logdna service definition from Bastion to destination
+    ansible.builtin.copy:
+       src: /usr/lib/systemd/system/logdna-agent.service
+       dest: /usr/lib/systemd/system/logdna-agent.service
+  - name: Change the hostname parameter into logdna.env
+    lineinfile:
+        dest: "/etc/logdna.env"
+        regexp: "LOGDNA_HOSTNAME"
+        line: "LOGDNA_HOSTNAME={{ ansible_facts['nodename'] }}"
+        state: present
+        backup: yes
+  - name: Add symphony worker role tag in logdna.env
+    lineinfile:
+        dest: "/etc/logdna.env"
+        regexp: "LOGDNA_TAGS"
+        line: "LOGDNA_TAGS=poc,us-south,dalaz1sim,symphony-worker"
+        state: present
+        backup: yes
+  - name: Start logdna service
+    systemd:
+        name: logdna-agent
+        state: started

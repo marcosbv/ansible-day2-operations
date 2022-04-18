@@ -1,0 +1,9 @@
+---
+- name: Create symlink
+  hosts: "{{ rhel_hosts }}"
+  tasks:
+  - name: Create symlink
+    file:
+      path: "{{ link_name }}"
+      state: link
+      src:  "{{ file_name }}"
