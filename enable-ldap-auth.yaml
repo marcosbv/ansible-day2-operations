@@ -1,0 +1,38 @@
+- name: Configure LDAP Authentication
+  hosts: all
+  tasks:
+    - name: Remove SSH Password Auth disable line
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        line: PasswordAuthentication no
+        state: absent
+    - name: Enable SSH password auth
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '\#*\s*PasswordAuthentication yes'
+        line: PasswordAuthentication yes
+    - name: Restart SSHD
+      ansible.builtin.systemd:
+        state: restarted
+        name: sshd
+    - name: Enable SSSD auth
+      ansible.builtin.command: 'authconfig --enablesssdauth --update'
+    - name: Create directory for server public key
+      ansible.builtin.file:
+        path: /etc/openldap/certs/
+        state: directory
+        mode: '600'
+    - name: Copy LDAP server public key
+      ansible.builtin.copy:
+        src: supportFiles/server_cert.pem
+        dest: /etc/openldap/certs/server_cert.pem
+        mode: '600'
+    - name: Copy sssd.conf
+      ansible.builtin.copy:
+        src: supportFiles/sssd.conf
+        dest: /etc/sssd/sssd.conf
+        mode: '600'
+    - name: Restart SSSD
+      ansible.builtin.systemd:
+        state: restarted
+        name: sssd
