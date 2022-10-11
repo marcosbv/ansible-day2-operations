@@ -1,0 +1,6 @@
+- name: Create test file
+  hosts: all
+  tasks:
+    - name: Create test file
+      ansible.builtin.file:
+        path: /root/test.file
