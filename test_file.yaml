@@ -4,3 +4,4 @@
     - name: Create test file
       ansible.builtin.file:
         path: /root/test.file
+        state: touch
