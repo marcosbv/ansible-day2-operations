@@ -1,9 +1,15 @@
 ---
 - hosts: "{{ rhel_hosts }}"
   tasks:
+    - name: get user home
+      register: user_home_path
+      shell: "getent passwd {{ ssh_user }}  | awk -F: '{ print $6 }'"
+   
     - name: update authorized_hosts
       lineinfile:
-        dest: "/root/.ssh/authorized_keys"
-        line: "{{ ssh_public_key }}"
+        dest: "{{ user_home_path.stdout }}/.ssh/authorized_keys"
+        line: "ssh-rsa {{ ssh_public_key }} UID@{{ ssh_user_email }}@ISSUED@{{ ansible_date_time.date }}"
+        regexp: "{{ ssh_public_key }}"
         state: "{{ ssh_state }}"
         backup: yes
+        create: yes
