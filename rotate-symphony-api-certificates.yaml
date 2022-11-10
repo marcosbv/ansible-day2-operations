@@ -1,0 +1,51 @@
+---
+- hosts: "{{ rhel_hosts }}[0]"
+  gather_facts: True
+  tasks:
+    - name: Send the new certificates to file share
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: /data/{{ cluster_id }}/sym731/security
+        mode: '0644'
+        backup: yes
+      loop:
+        - certificates/user.pem
+        - certificates/ca/root.pem
+        - certificates/ca/intermediate.pem
+        - certificates/user.key
+    - name: Generate full CA chain
+      assemble:
+        src: certificates/ca/
+        dest: /data/{{ cluster_id }}/sym731/security/cacert.pem
+        backup: yes
+        remote_src: no
+        delimiter: '\n'
+- hosts: "{{ rhel_hosts }}"
+  gather_facts: True
+  tasks:
+    - name: Import certificates into Java Key Store
+      shell: |
+        export PATH=$PATH:$EGO_TOP/jre/8.0.6.0/linux-x86_64/bin;
+        export KEYSTORE=/opt/ibm/spectrumcomputing/wlp/usr/shared/resources/security/serverKeyStore.jks
+        export KEYSTORE_P=Liberty
+        export CERT_PATH=/data/{{ cluster_id }}/sym731/security
+        keytool -delete -keystore $KEYSTORE -storepass $KEYSTORE_P -alias apicert
+        keytool -delete -keystore $KEYSTORE -storepass $KEYSTORE_P -alias intermediateca
+        keytool -delete -keystore $KEYSTORE -storepass $KEYSTORE_P -alias rootca
+        keytool -import -keystore $KEYSTORE -storepass $KEYSTORE_P -trustcacerts -noprompt -alias rootca -file $CERT_PATH/root.pem
+        keytool -import -keystore $KEYSTORE -storepass $KEYSTORE_P -noprompt -alias intermediateca -file $CERT_PATH/intermediate.pem
+        keytool -import -keystore $KEYSTORE -storepass $KEYSTORE_P -noprompt -alias apicert -file $CERT_PATH/user.pem
+- hosts: "{{ rhel_hosts }}[0]"
+  gather_facts: True
+  tasks:
+    - name: Restart ego on primary host
+      systemd:
+        name: ego
+        state: restarted
+- hosts: "{{ rhel_hosts }}[1]"
+  gather_facts: True
+  tasks:
+    - name: Restart ego on secondary host
+      systemd:
+        name: ego
+        state: restarted
