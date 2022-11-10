@@ -57,3 +57,33 @@ Add or remove authorized SSH keys:
 ````
 ansible-playbook -i workers.txt --private-key /etc/ssh/ssh_host_rsa_key --ssh-common-args '-o StrictHostKeyChecking=no' -e rhel_hosts="dalazsim1-workers" -e "ssh_public_key=ssh-key XSDSDSDS...." -e ssh_state=present/absent add-remove-authorized-keys.yaml 
 ````
+
+Rotate Symphony API certificates, used for SSL connection between client and SD/SSM:
+````
+ansible-playbook --private-key prod-wdcaz1 --inventory simpliciti-managers.txt -e 'cluster_id=citi-toraz2-smp' -e 'rhel_hosts=toraz1' -u root rotate-symphony-api-certificates.yaml 
+````
+Note: this command requires the certificate chain in the local folder, under certificates folder:
+```
+[marcosbv@wdccom-jump-host-1 ~]$ find certificates
+certificates
+certificates/ca # folder where your intermediate and root certificates reside. Ansible will concat them into cacert.pem
+certificates/ca/intermediate.pem # intermediate certificate
+certificates/ca/root.pem # root CA certificate
+certificates/user.pem # API certificate
+certificates/user.key # Certificate private key
+```
+
+They can be obtained by accessing the secrets in Secrets Manager (change the command according to your secret):
+
+````
+curl https://<instance-id>.us-south.secrets-manager.appdomain.cloud/v1/ibmcloud/private_cert/config/certificate_authorities/<root-ca-name>/ca/pem # root.pem
+# https://cloud.ibm.com/docs/secrets-manager?topic=secrets-manager-root-certificate-authorities&interface=ui
+
+curl curl https://<instance-id>.us-south.secrets-manager.appdomain.cloud/v1/ibmcloud/private_cert/config/certificate_authorities/<intermediate-ca-name>/ca/pem # intermediate.pem
+# https://cloud.ibm.com/docs/secrets-manager?topic=secrets-manager-intermediate-certificate-authorities&interface=ui
+
+ibmcloud secrets-manager secret --secret-type "private_cert" --id "xxxx" --service-url https://<instance-id>.us-south.secrets-manager.appdomain.cloud --output json | jq -r '.resources[0].secret_data.certificate' # user.pem
+ibmcloud secrets-manager secret --secret-type "private_cert" --id "xxxx" --service-url https://<instance-id>.us-south.secrets-manager.appdomain.cloud --output json | jq -r '.resources[0].secret_data.private_key' # user.key
+# https://cloud.ibm.com/docs/secrets-manager?topic=secrets-manager-access-secrets&interface=cli
+````
+
