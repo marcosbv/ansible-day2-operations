@@ -1,0 +1,11 @@
+---
+- name: Register into RHEL
+  hosts: "{{ rhel_hosts }}"
+  tasks:
+  - name: Copy register-vpc script
+    ansible.builtin.copy:
+       src: register-vpc.sh
+       dest: /tmp
+       mode: '0755'
+  - name: Run Register script
+    shell: cd /tmp && ./register-vpc.sh green us-south {{ activation_key }}

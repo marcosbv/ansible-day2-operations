@@ -1,0 +1,9 @@
+---
+- hosts: "{{ rhel_hosts }}"
+  tasks:
+    - name: Add Search domain to /etc/resolv.conf
+      lineinfile:
+        dest: "/etc/resolv.conf"
+        line: "search {{ domain }}"
+        state: "present"
+        backup: yes

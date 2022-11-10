@@ -1,0 +1,7 @@
+---
+- hosts: "{{ rhel_hosts }}"
+  gather_facts: True
+
+  tasks:
+  - name: run egoconfig change port
+    shell: su egoadmin -c "egoconfig setbaseport {{ baseport }}"
