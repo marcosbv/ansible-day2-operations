@@ -1,0 +1,24 @@
+---
+- name: Collect logs in a list of folders
+  hosts: "{{ rhel_hosts }}"
+  tasks:
+   - name: Print timestamp
+     shell: echo collected_logs_${HOSTNAME}_{{ '%Y-%m-%dT%H.%M.%S' | strftime }}
+     register: fileprefix
+   - name: Compress log folders
+     shell: tar -zcvf /tmp/{{fileprefix.stdout}}_{{ item|replace('/','') }}_collect.tar.gz {{ item }}
+     loop: "{{ logpaths.split(',') }}"
+   - name: Tar Host Log file
+     shell: tar -cvf /tmp/{{ fileprefix.stdout }}.tar /tmp/{{fileprefix.stdout}}*_collect.tar.gz && rm /tmp/*_collect.tar.gz
+   - name: Try to zip with best quality
+     shell: gzip --best /tmp/{{ fileprefix.stdout }}.tar
+   - name: Fetch the collected log file
+     fetch:
+        src: /tmp/{{ fileprefix.stdout }}.tar.gz
+        dest: /tmp/
+        flat: yes
+- name: Compress all received files
+  hosts: localhost
+  tasks:  
+   - name: Compress collected logs
+     shell: tar -zcvf /tmp/all_logs_{{ '%Y-%m-%dT%H.%M.%S' | strftime }}.tar.gz /tmp/collected_logs*.tar.gz && rm /tmp/collected_logs*.tar.gz
