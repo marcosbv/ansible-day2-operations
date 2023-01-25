@@ -1,0 +1,11 @@
+---
+- hosts: "{{ rhel_hosts }}"
+  tasks:
+    - name: Add redhat repo
+      yum_repository:
+        file: redhat
+        name: RHEL-7-server
+        description: RHEL 7 server
+        baseurl: "ftp://172.200.3.18/rhel-7-server-rpms"
+        enabled: yes
+      when: ansible_os_family == 'RedHat' and ansible_distribution_major_version|int == 7
