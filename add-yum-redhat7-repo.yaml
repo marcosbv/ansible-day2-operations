@@ -1,0 +1,30 @@
+---
+# How to use:
+# 1. Create an ansible.cfg file, example:
+#  [defaults]
+#  remote_user=mhepfer
+#  inventory=inventory
+#  forks=50
+#  host_key_checking = False
+#  fact_caching_timeout = 600
+#
+#  [privilege_escalation]
+#  become=True
+#  become_ask_pass=False
+#  become_exe='sudo'
+# 2. Create an inventory file
+# 3. Do a dry-run by running with the --check flag.  Example:
+#        ansible-playbook main.yml --extra-vars "rhel_hosts=symphony_servers repo_ip=172.200.3.18" --check -k 
+# 4. Inspect the output
+# 5. Run without the --check flag
+#
+- hosts: "{{ rhel_hosts }}"
+  tasks:
+    - name: Add redhat repo
+      yum_repository:
+        file: redhat
+        name: RHEL-7-server
+        description: RHEL 7 server
+        baseurl: "ftp://{{ repo_ip }}/rhel-7-server-rpms"
+        enabled: yes
+      when: ansible_os_family == 'RedHat' and ansible_distribution_major_version|int == 7
